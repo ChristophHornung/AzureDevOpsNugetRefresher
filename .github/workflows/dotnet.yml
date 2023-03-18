@@ -22,4 +22,9 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Package
-      run: dotnet publish --no-restore --no-build --configuration Release --verbosity normal
+      run: dotnet publish --no-restore --no-build --configuration Release --verbosity normal -o Release/win-x64
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: AzureDevopsNugetRefresherRelease
+        path: /home/runner/work/DotNet6WithGithubActions/DotNet6WithGithubActions/release/
