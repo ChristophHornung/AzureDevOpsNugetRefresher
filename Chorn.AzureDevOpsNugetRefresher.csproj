@@ -8,6 +8,7 @@
 		<SelfContained>true</SelfContained>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<TargetName>AzureDevopsNugetRefresher</TargetName>
+		<Version>0.0.1</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.VisualStudio.Services.InteractiveClient" Version="19.218.0-preview" />
