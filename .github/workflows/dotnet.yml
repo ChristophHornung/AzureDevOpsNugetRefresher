@@ -24,7 +24,7 @@ jobs:
     - name: Package
       run: dotnet publish --no-restore --no-build --configuration Release --verbosity normal -o Release/win-x64 Chorn.AzureDevOpsNugetRefresher.csproj
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: AzureDevopsNugetRefresherRelease
         path: Release/win-x64
