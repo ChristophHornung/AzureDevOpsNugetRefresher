@@ -18,13 +18,13 @@ jobs:
       with:
         dotnet-version: 7.0.x
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore Chorn.AzureDevOpsNugetRefresher.csproj
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore Chorn.AzureDevOpsNugetRefresher.csproj
     - name: Package
-      run: dotnet publish --no-restore --no-build --configuration Release --verbosity normal -o Release/win-x64
+      run: dotnet publish --no-restore --no-build --configuration Release --verbosity normal -o Release/win-x64 Chorn.AzureDevOpsNugetRefresher.csproj
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: AzureDevopsNugetRefresherRelease
-        path: /home/runner/work/DotNet6WithGithubActions/DotNet6WithGithubActions/release/
+        path: Release/win-x64
