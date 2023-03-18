@@ -8,9 +8,9 @@ on:
  
 jobs:
   build:
- 
+
     runs-on: windows-latest
- 
+
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
@@ -24,4 +24,4 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal
     - name: Package
-      run: dotnet pack
+      run: dotnet pack --no-restore --no-build --verbosity normal
