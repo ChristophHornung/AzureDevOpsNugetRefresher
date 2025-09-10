@@ -1,7 +1,11 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Net;
+using System.Net.Http;
 using Microsoft.VisualStudio.Services.Client;
+using Microsoft.VisualStudio.Services.Common;
+using Microsoft.VisualStudio.Services.Profile;
+using Microsoft.VisualStudio.Services.Profile.Client;
 using Microsoft.VisualStudio.Services.WebApi;
 
 namespace Chorn.AzureDevOpsNugetRefresher;
@@ -75,16 +79,23 @@ internal class Program
 		string packageVersion = arg.ParseResult.GetValueForOption(versionOption)!;
 
 		VssClientCredentials credentials = new();
+		credentials.Storage =
+			new VssClientCredentialStorage();
 
 		Uri devopsUrl = new Uri($"https://dev.azure.com/{organizationName}");
 		VssConnection connection = new VssConnection(devopsUrl, credentials);
-		
+
 		Console.WriteLine("Connecting to azure devops...");
 		await connection.ConnectAsync();
 
 		Console.WriteLine("Connected.");
+
+		// Get user profile
+		ProfileHttpClient profileClient = connection.GetClient<ProfileHttpClient>();
+		Profile profile = await profileClient.GetProfileAsync(new ProfileQueryContext(AttributesScope.Core));
+		Console.WriteLine($"Authenticated as: {profile.DisplayName}");
 		
-		credentials.TryGetTokenProvider(devopsUrl, out var provider);
+		credentials.TryGetTokenProvider(devopsUrl, out IssuedTokenProvider? provider);
 		CookieCollection cookies = ((VssFederatedToken)provider.CurrentToken).CookieCollection;
 
 		Uri pkgRefresh =
@@ -97,16 +108,23 @@ internal class Program
 			cookieContainer.Add(new Uri("https://pkgs.dev.azure.com/"), cookie);
 		}
 
-		using var handler = new HttpClientHandler() { CookieContainer = cookieContainer };
-		using var client = new HttpClient(handler) { BaseAddress = pkgRefresh };
+		using HttpClientHandler handler = new() { CookieContainer = cookieContainer };
+		using HttpClient client = new(handler) { BaseAddress = pkgRefresh };
 		HttpRequestMessage headReq = new HttpRequestMessage(HttpMethod.Head, "");
 		Console.WriteLine($"Refreshing package {packageName}:{packageVersion}");
 		HttpResponseMessage headResponse = await client.SendAsync(headReq);
 		headResponse.EnsureSuccessStatusCode();
 		Console.WriteLine("Refreshed.");
-		HttpResponseMessage getResponse = await client.GetAsync(pkgRefresh);
-		getResponse.EnsureSuccessStatusCode();
 		
-		Console.WriteLine($"Server returned {getResponse.Content.Headers.ContentDisposition.FileName}.");
+		HttpResponseMessage pkgRefreshResponse = await client.GetAsync(pkgRefresh);
+		pkgRefreshResponse.EnsureSuccessStatusCode();
+		
+		HttpRequestMessage getRequest = new HttpRequestMessage(HttpMethod.Get, "");
+		Console.WriteLine("Downloading package to confirm refresh...");
+		HttpResponseMessage getResponse = await client.SendAsync(getRequest);
+		getResponse.EnsureSuccessStatusCode();
+
+
+		Console.WriteLine($"Server returned {pkgRefreshResponse.Content.Headers.ContentDisposition.FileName}.");
 	}
 }
